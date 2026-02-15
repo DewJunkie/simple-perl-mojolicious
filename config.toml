@@ -1,0 +1,8 @@
+# Application Configuration (TOML format)
+
+[debug]
+enabled = true
+
+[tcp_service]
+host = "localhost"
+port = 1337

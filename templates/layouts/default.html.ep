@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= $title %></title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+    <header class="header">
+        <div class="container">
+            <h1 class="logo">MySite</h1>
+            <nav class="main-nav">
+                <ul>
+                    <% foreach my $tab (@$tabs) { %>
+                    <li><a href="<%= $tab->{link} %>" class="<%= $tab->{is_active} ? 'active' : '' %>"><%= $tab->{name} %></a></li>
+                    <% } %>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <%= content %>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 MySite. All rights reserved.</p>
+        </div>
+    </footer>
+
+</body>
+</html>

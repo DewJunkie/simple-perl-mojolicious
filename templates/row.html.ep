@@ -1,0 +1,7 @@
+<tr>
+    <td><%= $row->{id} %></td>
+    <td><%= $row->{name} %></td>
+    <td><%= $row->{role} %></td>
+    <td><span class="status <%= lc($row->{status}) %>"><%= $row->{status} %></span></td>
+    <td><%= $row->{data} %></dt>
+</tr>
