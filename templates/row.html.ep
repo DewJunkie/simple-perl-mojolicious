@@ -1,7 +1,8 @@
-<tr>
-    <td><%= $row->{id} %></td>
-    <td><%= $row->{name} %></td>
-    <td><%= $row->{role} %></td>
-    <td><span class="status <%= lc($row->{status}) %>"><%= $row->{status} %></span></td>
-    <td><%= $row->{data} %></dt>
-</tr>
+<div class="record">
+  <dl>
+    <% foreach my $pair (@$record) { %>
+      <dt><%= $pair->{label} %></dt>
+      <dd><%= $pair->{value} %></dd>
+    <% } %>
+  </dl>
+</div>

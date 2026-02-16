@@ -64,7 +64,6 @@ get '/' => sub ( $c ) {
             { name => 'About', link => 'about', is_active => 0 },
             { name => 'Contact', link => 'contact', is_active => 0 },
         ],
-        table_headers => [ 'ID', 'Name', 'Role', 'Status' ],
     };
     $c->render(template => 'index', %$vars);
 };
@@ -74,37 +73,50 @@ get '/rows' => sub ($c) {
     $c->render_later;
 
     # Dispatch two concurrent TCP queries
-    my $query1 = query_backend_p($tcp_config->{host}, $tcp_config->{port});
-    my $query2 = query_backend_p($tcp_config->{host}, $tcp_config->{port});
+    my @promises;
+    push @promises, query_backend_p($tcp_config->{host}, $tcp_config->{port});
+    push @promises, query_backend_p($tcp_config->{host}, $tcp_config->{port});
+    push @promises, query_backend_p($tcp_config->{host}, $tcp_config->{port});
 
-    Mojo::Promise->all($query1, $query2)
-        ->then(sub ($res1, $res2) {
+    Mojo::Promise->all(@promises)
+        ->then(sub {
             my @results = @_; # All promise results are in @_
-            my @data;
-            
-            for my $i (0 .. $#results) {
-                push @data, {
-                    id => $i + 1,
-                    name => "TCP Query " . ($i + 1),
-                    role => 'Data Processor',
-                    status => $results[$i],
-                    data => $results[$i]
-                };
-            }
+            my @records;
 
+            my $i = 0;
             my $html = '';
-            foreach my $row (@data) {
-                $html .= $c->render_to_string('row', row => $row, layout => undef);
+            foreach my $result (@results) {
+                my $record = [];
+                if ($i % 2 == 0) {
+                    # First record
+                    $record = [
+                        { label => 'Record ID', value => 'A-1' },
+                        { label => 'Source',    value => 'TCP Query 1' },
+                        { label => 'Payload',   value => $results[0]->[0] },
+                        { label => 'Length',    value => length($results[0]->[0]) . ' bytes' }
+                    ];
+                } else {
+                    # Second record (with a different structure)
+                    $record =[ 
+                        { label => 'Record ID', value => 'B-2' },
+                        { label => 'Source',    value => 'TCP Query 2' },
+                        { label => 'Payload',   value => $results[1]->[0] },
+                        { label => 'Timestamp', value => time() },
+                        { label => 'Status',    value => 'Processed' }
+                    ];
+                }
+                $html .= $c->render_to_string('row', record => $record, layout => undef);
+                $i = $i + 1;
             }
             $c->render(text => $html);
         })
         ->catch(sub ($err) {
-            my $html = $c->render_to_string('row', row => {
-                id => '!',
-                name => 'Error',
-                role => 'System',
-                status => $err
-            }, layout => undef);
+            # Handle the case where the error is also an array ref
+            my $error_message = ref $err eq 'ARRAY' ? $err->[0] : $err;
+            my $error_record = [
+                { label => 'Error', value => $error_message }
+            ];
+            my $html = $c->render_to_string('row', record => $error_record, layout => undef);
             $c->render(text => $html, status => 500);
         });
 };
